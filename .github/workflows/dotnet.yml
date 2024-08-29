@@ -56,7 +56,7 @@ jobs:
       - name: Deploy to Dev
         uses: Azure/webapps-deploy@v2
         with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME_DEV }}
+          app-name: tpkmkgl5rmtww-dev
           images: ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }}
 
   deploy-test:
@@ -70,7 +70,7 @@ jobs:
       - name: Deploy to Test
         uses: Azure/webapps-deploy@v2
         with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME_TEST }}
+          app-name: tpkmkgl5rmtww-test
           images: ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }}
 
   deploy-prod:
@@ -84,5 +84,5 @@ jobs:
       - name: Deploy to Prod
         uses: Azure/webapps-deploy@v2
         with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME_PROD }}
+          app-name: tpkmkgl5rmtww-prod
           images: ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }}

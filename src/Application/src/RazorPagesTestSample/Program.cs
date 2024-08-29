@@ -7,6 +7,9 @@ using Microsoft.Extensions.Logging;
 using RazorPagesTestSample.Data;
 
 namespace RazorPagesTestSample
+/// <summary>
+/// Represents the entry point of the application.
+/// </summary>
 {
     public class Program
     {

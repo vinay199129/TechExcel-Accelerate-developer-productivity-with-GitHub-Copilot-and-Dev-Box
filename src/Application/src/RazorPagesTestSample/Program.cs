@@ -8,7 +8,7 @@ using RazorPagesTestSample.Data;
 
 namespace RazorPagesTestSample
 /// <summary>
-/// Represents the entry point of the application 1.
+/// Represents the entry point of the application 2.
 /// </summary>
 {
     public class Program

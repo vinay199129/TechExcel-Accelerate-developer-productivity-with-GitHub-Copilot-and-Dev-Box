@@ -45,19 +45,44 @@ jobs:
           docker build -t ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }} ${{ env.dockerFolderPath }}
           docker push ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }}
 
-  deploy:
-    runs-on: ubuntu-latest
+  deploy-dev:
     needs: build
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Docker login
-        run: docker login ${{ env.registryName }} -u ${{ secrets.ACR_USERNAME }} -p ${{ secrets.ACR_PASSWORD }}
+      - name: Deploy to Dev
+        uses: Azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_DEV }}
+          images: ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }}
 
-      - name: Docker build
-        run: docker build -t ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }} --build-arg build_version=${{ env.tag }} ${{ env.dockerFolderPath }}
+  deploy-test:
+    needs: deploy-dev
+    runs-on: ubuntu-latest
 
-      - name: Docker push
-        run: docker push ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deploy to Test
+        uses: Azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_TEST }}
+          images: ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }}
+
+  deploy-prod:
+    needs: deploy-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deploy to Prod
+        uses: Azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_PROD }}
+          images: ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }}

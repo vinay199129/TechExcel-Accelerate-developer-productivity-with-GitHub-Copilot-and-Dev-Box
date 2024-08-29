@@ -8,6 +8,12 @@ on:
     paths:
       - "src/Application/**"
 
+env:
+  registryName: "${{ secrets.ACR_LOGIN_SERVER }}"
+  repositoryName: "techexcel/dotnetcoreapp"
+  dockerFolderPath: "src/Application/src/RazorPagesTestSample"
+  tag: "${{ github.run_number }}"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,10 +28,36 @@ jobs:
           dotnet-version: "8.0.x"
 
       - name: Install dependencies
-        run: dotnet restore src/Application/src/RazorPagesTestSample/RazorPagesTestSample.csproj
+        run: dotnet restore ${{ env.dockerFolderPath }}/RazorPagesTestSample.csproj
 
       - name: Build
-        run: dotnet build src/Application//srcRazorPagesTestSample/RazorPagesTestSample.csproj --no-restore
+        run: dotnet build ${{ env.dockerFolderPath }}/RazorPagesTestSample.csproj --no-restore
 
       - name: Test
         run: dotnet test src/Application/tests/RazorPagesTestSample.Tests/RazorPagesTestSample.Tests.csproj --no-build --verbosity normal
+
+      - name: Login to Azure Container Registry
+        run: |
+          echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }} ${{ env.dockerFolderPath }}
+          docker push ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Docker login
+        run: docker login ${{ env.registryName }} -u ${{ secrets.ACR_USERNAME }} -p ${{ secrets.ACR_PASSWORD }}
+
+      - name: Docker build
+        run: docker build -t ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }} --build-arg build_version=${{ env.tag }} ${{ env.dockerFolderPath }}
+
+      - name: Docker push
+        run: docker push ${{ env.registryName }}/${{ env.repositoryName }}:${{ env.tag }}

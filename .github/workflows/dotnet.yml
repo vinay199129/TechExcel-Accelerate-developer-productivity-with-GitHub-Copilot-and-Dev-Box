@@ -1,0 +1,31 @@
+name: .NET
+
+on:
+  push:
+    paths:
+      - "src/Application/**"
+  pull_request:
+    paths:
+      - "src/Application/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install dependencies
+        run: dotnet restore src/Application/Application.csproj
+
+      - name: Build
+        run: dotnet build src/Application/Application.csproj --no-restore
+
+      - name: Test
+        run: dotnet test src/Application.Tests/Application.Tests.csproj --no-build --verbosity normal

@@ -4,6 +4,7 @@ on: workflow_dispatch
 
 env:
   targetEnv: prod
+  webappname: tpkmkgl5rmtww-prod
 
 jobs:
   build-and-deploy:
@@ -16,7 +17,7 @@ jobs:
       # Checkout code
       - uses: actions/checkout@main
 
-        # Log into Azure
+      # Log into Azure
       - uses: azure/login@v2.1.1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -24,7 +25,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           enable-AzPSSession: true
 
-        # Deploy ARM template
+      # Deploy ARM template
       - name: Run ARM deploy
         uses: azure/arm-deploy@v1
         with:
@@ -33,3 +34,14 @@ jobs:
           template: ./src/InfrastructureAsCode/main.bicep
           parameters: environment=${{ env.targetEnv }}
           scope: "resourcegroup"
+
+      # Docker login
+      - name: Docker login
+        run: docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} -p ${{ secrets.ACR_PASSWORD }}
+
+      # Update Web App to pull the latest image from ACR
+      - name: Deploy to Azure Web App
+        uses: Azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.webappname }}
+          images: ${{ secrets.ACR_LOGIN_SERVER }}/techexcel/dotnetcoreapp:${{ github.run_number }}
